@@ -3,8 +3,10 @@ providers:
       type: sparql
       name: "Local Virtuoso"
       url: "http://localhost:8080/sparql/"
+      graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
 
   - uom.gr:
       type: sparql
       name: "Data Dai Virtuoso"
       url: "http://data.dai.uom.gr:8890/sparql"
+      graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
