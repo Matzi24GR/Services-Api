@@ -1,0 +1,10 @@
+providers:
+  - local:
+      type: sparql
+      name: "Local Virtuoso"
+      url: "http://localhost:8080/sparql/"
+
+  - uom.gr:
+      type: sparql
+      name: "Data Dai Virtuoso"
+      url: "http://data.dai.uom.gr:8890/sparql"
