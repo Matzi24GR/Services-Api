@@ -27,11 +27,23 @@ class SparqlProvider(Provider):
         return {"name": self.name, "type": self.type, "tag": self.tag, "url": self.url, "graph-uri": self.graph_uri}
 
     def get_services(self):
-        query = "PREFIX+cpsv%3A%3Chttp%3A%2F%2Fpurl.org%2Fvocab%2Fcpsv%23%3E+PREFIX+dct%3A+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2F%3E+SELECT+%3Fid+%3Fname+WHERE+%7B%3Fid+a+cpsv%3APublicService.+%3Fid+dct%3Atitle+%3Fname%7D+ORDER+BY+%3Fname"
-        other_options = "&format=application%2Fsparql-results%2Bjson&should-sponge=&timeout=0&signal_void=on"
+        query = """
+            PREFIX cpsv:<http://purl.org/vocab/cpsv#>
+            PREFIX dct: <http://purl.org/dc/terms/>
+            
+            SELECT ?id ?name
+            WHERE {
+                ?id a cpsv:PublicService.
+                ?id dct:title ?name}
+            ORDER BY ?name
+        """
 
-        data = requests.get(
-            f"{self.url}/?default-graph-uri={self.graph_uri}&query={query}{other_options}")
+        payload = {
+            'default-graph-uri': self.graph_uri,
+            'query': query,
+            'format': 'application/sparql-results+json'
+        }
+        data = requests.get(self.url, payload)
 
         json = data.json()['results']['bindings']
         for item in json:
@@ -45,10 +57,27 @@ class SparqlProvider(Provider):
         return json
 
     def get_service_details(self, id):
-        query = f"PREFIX+cpsv%3A<http%3A%2F%2Fpurl.org%2Fvocab%2Fcpsv%23>%0D%0APREFIX+dct%3A+<http%3A%2F%2Fpurl.org%2Fdc%2Fterms%2F>+%0D%0ASELECT+%3Fname+%3Fverb+%3Fobject%0D%0AWHERE+\u007b%0D%0A%3Fid+a+cpsv%3APublicService.%0D%0A%3Fid+dct%3Atitle+%3Fname.%0D%0A%3Fid+%3Fverb+%3Fobject.%0D%0AFILTER+(regex(str(%3Fid)%2C+\"{id}\"+))+%0D%0A\u007d"
-        other_options = "&format=application%2Fsparql-results%2Bjson&should-sponge=&timeout=0&signal_void=on"
-        data = requests.get(
-            f"{self.url}/?default-graph-uri={self.graph_uri}&query={query}{other_options}")
+
+        # Double curly brackets to escape them ( {{, }} )
+        query = '''
+            PREFIX cpsv:<http://purl.org/vocab/cpsv#>
+            PREFIX dct:<http://purl.org/dc/terms/>
+            
+            SELECT ?name ?verb ?object
+            WHERE {{?id a cpsv:PublicService.
+                ?id dct:title ?name.
+                ?id ?verb ?object.
+            FILTER (regex(str(?id),"{id}"))
+            }}
+        '''.format(id=id)
+
+        payload = {
+            'default-graph-uri': self.graph_uri,
+            'query': query,
+            'format': 'application/sparql-results+json'
+        }
+        data = requests.get(self.url, payload)
+
         json = data.json()['results']['bindings']
         p_output = {"name": json[0]["name"]["value"]}
         for item in json:
