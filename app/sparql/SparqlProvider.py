@@ -14,13 +14,11 @@ class SparqlProvider(Provider):
 
     @classmethod
     def from_dict(cls, dict):
-        tag = list(dict.keys())[0]
-        data = dict[tag]
-        return SparqlProvider(type=data['type'],
-                              name=data['name'],
-                              tag=tag,
-                              url=data["url"],
-                              graph_uri=data["graph_uri"]
+        return SparqlProvider(type=dict['type'],
+                              name=dict['name'],
+                              tag=dict['tag'],
+                              url=dict["url"],
+                              graph_uri=dict["graph_uri"]
                               )
 
     def to_dict(self):
@@ -43,9 +41,13 @@ class SparqlProvider(Provider):
             'query': query,
             'format': 'application/sparql-results+json'
         }
-        data = requests.get(self.url, payload)
+        response = requests.get(self.url, payload)
 
-        json = data.json()['results']['bindings']
+        if response.status_code != 200:
+            print(f"Can't reach {self.url}, Status Code: [{response.status_code}]'")
+            return
+
+        json = response.json()['results']['bindings']
         for item in json:
             id = item['id']['value']
             item.pop('id')
@@ -55,6 +57,7 @@ class SparqlProvider(Provider):
             item['name'] = name
             item['source'] = self.tag
         return json
+
 
     def get_service_details(self, id):
 

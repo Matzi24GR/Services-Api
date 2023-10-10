@@ -1,12 +1,18 @@
 providers:
-  - local:
-      type: sparql
-      name: "Local Virtuoso"
-      url: "http://localhost:8080/sparql/"
-      graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
+  - tag: "local"
+    name: "Local Virtuoso"
+    type: sparql
+    url: "http://localhost:8080/sparql/"
+    graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
 
-  - uom.gr:
-      type: sparql
-      name: "Data Dai Virtuoso"
-      url: "http://data.dai.uom.gr:8890/sparql"
-      graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
+  - tag: "uom.gr"
+    name: "Data Dai Virtuoso"
+    type: sparql
+    url: "http://data.dai.uom.gr:8890/sparql"
+    graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
+
+  - tag: "geomat.dev"
+    name: "Remote self-hosted Virtuoso"
+    type: sparql
+    url: "https://sparql.geomat.dev"
+    graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"

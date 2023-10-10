@@ -5,13 +5,8 @@ from .sparql.SparqlProvider import SparqlProvider
 class ProviderFactory:
 
     @classmethod
-    def _get_provider_type(self, provider):
-        value = next(iter(provider.items()))[1]
-        return value["type"]
-
-    @classmethod
     def _getProvider(cls, provider_dict):
-        match ProviderFactory._get_provider_type(provider_dict):
+        match provider_dict["type"]:
             case "sparql":
                 return SparqlProvider.from_dict(provider_dict)
             case _:
