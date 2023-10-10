@@ -55,9 +55,8 @@ class SparqlProvider(Provider):
             name = item['name']['value']
             item.pop('name')
             item['name'] = name
-            item['source'] = self.tag
+            item['provider'] = self.tag
         return json
-
 
     def get_service_details(self, id):
 
@@ -79,9 +78,17 @@ class SparqlProvider(Provider):
             'query': query,
             'format': 'application/sparql-results+json'
         }
-        data = requests.get(self.url, payload)
+        response = requests.get(self.url, payload)
 
-        json = data.json()['results']['bindings']
+        if response.status_code != 200:
+            print(f"Can't reach {self.url}, Status Code: [{response.status_code}]'")
+            return
+
+        json = response.json()['results']['bindings']
+
+        if len(json) == 0:
+            return
+
         p_output = {"name": json[0]["name"]["value"]}
         for item in json:
             verb = item["verb"]["value"].split('/')[-1].split('#')[-1]

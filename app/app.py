@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, abort
 from .ProviderFactory import ProviderFactory
 
 app = Flask(__name__)
@@ -23,8 +23,8 @@ def get_cpsv_services():
     providers = ProviderFactory.read_providers()
     merged = []
     for provider in providers:
-        json = provider.get_services()
-        merged.append(json)
+        services = provider.get_services()
+        merged += services
     return merged
 
 
@@ -34,7 +34,10 @@ def get_cpsv_service_details(id):
     providers = ProviderFactory.read_providers()
     for provider in providers:
         p_output = provider.get_service_details(id)
-        output.append({"provider": provider.name, "results": p_output})
+        if p_output != None:
+            output.append({"provider": provider.name, "results": p_output})
+    if len(output) == 0:
+        abort(404)
     return output
 
 
