@@ -5,7 +5,7 @@ from .sparql.SparqlProvider import SparqlProvider
 class ProviderFactory:
 
     @classmethod
-    def _getProvider(cls, provider_dict):
+    def _get_provider(cls, provider_dict):
         match provider_dict["type"]:
             case "sparql":
                 return SparqlProvider.from_dict(provider_dict)
@@ -18,5 +18,5 @@ class ProviderFactory:
         with(open("./config.yaml", 'r')) as file:
             config = yaml.load(file, yaml.FullLoader)
             for item in config['providers']:
-                providers.append(ProviderFactory._getProvider(item))
+                providers.append(ProviderFactory._get_provider(item))
             return providers

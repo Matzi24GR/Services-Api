@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, abort
-from .ProviderFactory import ProviderFactory
+from models.ProviderFactory import ProviderFactory
 
 app = Flask(__name__)
 
@@ -34,7 +34,7 @@ def get_cpsv_service_details(id):
     providers = ProviderFactory.read_providers()
     for provider in providers:
         p_output = provider.get_service_details(id)
-        if p_output != None:
+        if p_output is not None:
             output.append({"provider": provider.name, "results": p_output})
     if len(output) == 0:
         abort(404)
@@ -42,4 +42,4 @@ def get_cpsv_service_details(id):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0", port=80)

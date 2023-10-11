@@ -1,6 +1,6 @@
 import requests
 
-from app.models.Provider import Provider
+from ..Provider import Provider
 
 
 class SparqlProvider(Provider):

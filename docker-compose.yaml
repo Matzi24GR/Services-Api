@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  api:
+    build: .
+    container_name: cpsv-api
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    ports:
+      - "80:80"
