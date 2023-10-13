@@ -1,4 +1,5 @@
 import requests
+from SPARQLWrapper import SPARQLWrapper, JSON
 
 from ..Provider import Provider
 
@@ -11,6 +12,9 @@ class SparqlProvider(Provider):
         self.tag = tag
         self.url = url
         self.graph_uri = graph_uri
+
+        self.sparql = SPARQLWrapper(self.url, self.graph_uri)
+        self.sparql.setReturnFormat(JSON)
 
     @classmethod
     def from_dict(cls, dict):
@@ -29,34 +33,28 @@ class SparqlProvider(Provider):
             PREFIX cpsv:<http://purl.org/vocab/cpsv#>
             PREFIX dct: <http://purl.org/dc/terms/>
             
-            SELECT ?id ?name
+            SELECT DISTINCT ?id ?name
             WHERE {
                 ?id a cpsv:PublicService.
                 ?id dct:title ?name}
             ORDER BY ?name
         """
 
-        payload = {
-            'default-graph-uri': self.graph_uri,
-            'query': query,
-            'format': 'application/sparql-results+json'
-        }
-        response = requests.get(self.url, payload)
-
-        if response.status_code != 200:
-            print(f"Can't reach {self.url}, Status Code: [{response.status_code}]'")
-            return
-
-        json = response.json()['results']['bindings']
-        for item in json:
-            id = item['id']['value']
-            item.pop('id')
-            item['id'] = id.split('/')[-1]
-            name = item['name']['value']
-            item.pop('name')
-            item['name'] = name
-            item['provider'] = self.tag
-        return json
+        self.sparql.setQuery(query)
+        try:
+            response = self.sparql.queryAndConvert()
+            data = response['results']['bindings']
+            for item in data:
+                id = item['id']['value']
+                item.pop('id')
+                item['id'] = id.split('/')[-1]
+                name = item['name']['value']
+                item.pop('name')
+                item['name'] = name
+                item['provider'] = self.tag
+            return data
+        except():
+            print(f"Failed to query {self.url}")
 
     def get_service_details(self, id):
 

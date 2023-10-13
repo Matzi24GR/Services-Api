@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify, abort, render_template
 from models.ProviderFactory import ProviderFactory
 
 app = Flask(__name__)
@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def main():
-    return 'Default'
+    return render_template('swaggerui.html')
 
 
 @app.route('/providers')
@@ -42,4 +42,4 @@ def get_cpsv_service_details(id):
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=80)
+    app.run(host="0.0.0.0", port=5000)
