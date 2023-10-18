@@ -1,3 +1,4 @@
+import os
 from urllib.error import HTTPError
 
 import requests
@@ -39,7 +40,8 @@ class SparqlProvider(Provider):
             SELECT DISTINCT ?id ?name
             WHERE {{
                 ?id a cpsv:PublicService.
-                ?id dct:title ?name}}
+                ?id dct:title ?name
+            }} 
             ORDER BY ?name
         """
         self.sparql.setQuery(query)
@@ -60,18 +62,9 @@ class SparqlProvider(Provider):
 
     def get_service_details(self, id):
 
-        # Double curly brackets to escape them ( {{, }} )
-        query = f"""
-            PREFIX cpsv:<http://purl.org/vocab/cpsv#>
-            PREFIX dct:<http://purl.org/dc/terms/>
-            
-            SELECT ?name ?verb ?object
-            WHERE {{?id a cpsv:PublicService.
-                ?id dct:title ?name.
-                ?id ?verb ?object.
-            FILTER (regex(str(?id),"{id}"))
-            }}
-        """
+        f = open("app/models/sparql/query.sparql", "r")
+        query = f.read().format(id=id)
+        print(query)
 
         payload = {
             'default-graph-uri': self.graph_uri,
@@ -89,15 +82,15 @@ class SparqlProvider(Provider):
         if len(json) == 0:
             return None
 
-        p_output = {"name": json[0]["name"]["value"]}
+        p_output = {}
         for item in json:
-            verb = item["verb"]["value"].split('/')[-1].split('#')[-1]
-            object = item["object"]["value"].split('/')[-1].split('#')[-1]
-            if verb in p_output.keys():
-                if p_output[verb].__class__ == str:
-                    p_output[verb] = [p_output[verb], object]
-                elif p_output[verb].__class__ == list:
-                    p_output[verb].append(object)
+            field = item["field"]["value"].split('/')[-1].split('#')[-1]
+            data = item["data"]["value"].split('/')[-1].split('#')[-1]
+            if field in p_output.keys():
+                if p_output[field].__class__ == str:
+                    p_output[field] = [p_output[field], data]
+                elif p_output[field].__class__ == list:
+                    p_output[field].append(data)
             else:
-                p_output[verb] = object
+                p_output[field] = data
         return p_output
