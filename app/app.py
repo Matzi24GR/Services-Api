@@ -24,7 +24,8 @@ def get_cpsv_services():
     merged = []
     for provider in providers:
         services = provider.get_services()
-        merged += services
+        if services is not None:
+            merged += services
     return merged
 
 

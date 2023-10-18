@@ -1,3 +1,5 @@
+from urllib.error import HTTPError
+
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
 
@@ -29,17 +31,17 @@ class SparqlProvider(Provider):
         return {"name": self.name, "type": self.type, "tag": self.tag, "url": self.url, "graph-uri": self.graph_uri}
 
     def get_services(self):
-        query = """
+        query = f"""
             PREFIX cpsv:<http://purl.org/vocab/cpsv#>
             PREFIX dct: <http://purl.org/dc/terms/>
             
+            WITH <{self.graph_uri}>
             SELECT DISTINCT ?id ?name
-            WHERE {
+            WHERE {{
                 ?id a cpsv:PublicService.
-                ?id dct:title ?name}
+                ?id dct:title ?name}}
             ORDER BY ?name
         """
-
         self.sparql.setQuery(query)
         try:
             response = self.sparql.queryAndConvert()
@@ -53,13 +55,13 @@ class SparqlProvider(Provider):
                 item['name'] = name
                 item['provider'] = self.tag
             return data
-        except():
+        except HTTPError:
             print(f"Failed to query {self.url}")
 
     def get_service_details(self, id):
 
         # Double curly brackets to escape them ( {{, }} )
-        query = '''
+        query = f"""
             PREFIX cpsv:<http://purl.org/vocab/cpsv#>
             PREFIX dct:<http://purl.org/dc/terms/>
             
@@ -69,7 +71,7 @@ class SparqlProvider(Provider):
                 ?id ?verb ?object.
             FILTER (regex(str(?id),"{id}"))
             }}
-        '''.format(id=id)
+        """
 
         payload = {
             'default-graph-uri': self.graph_uri,
@@ -85,7 +87,7 @@ class SparqlProvider(Provider):
         json = response.json()['results']['bindings']
 
         if len(json) == 0:
-            return
+            return None
 
         p_output = {"name": json[0]["name"]["value"]}
         for item in json:
