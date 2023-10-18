@@ -46,9 +46,8 @@ class SparqlProvider(Provider):
         """
         self.sparql.setQuery(query)
         try:
-            response = self.sparql.queryAndConvert()
-            data = response['results']['bindings']
-            for item in data:
+            response = self.sparql.queryAndConvert()['results']['bindings']
+            for item in response:
                 id = item['id']['value']
                 item.pop('id')
                 item['id'] = id.split('/')[-1]
@@ -56,41 +55,33 @@ class SparqlProvider(Provider):
                 item.pop('name')
                 item['name'] = name
                 item['provider'] = self.tag
-            return data
+            return response
         except HTTPError:
             print(f"Failed to query {self.url}")
 
     def get_service_details(self, id):
 
         f = open("app/models/sparql/query.sparql", "r")
-        query = f.read().format(id=id)
-        print(query)
+        query = f.read().format(graph_uri=self.graph_uri, id=id)
 
-        payload = {
-            'default-graph-uri': self.graph_uri,
-            'query': query,
-            'format': 'application/sparql-results+json'
-        }
-        response = requests.get(self.url, payload)
+        self.sparql.setQuery(query)
+        try:
+            response = self.sparql.queryAndConvert()['results']['bindings']
 
-        if response.status_code != 200:
-            print(f"Can't reach {self.url}, Status Code: [{response.status_code}]'")
-            return
+            if len(response) == 0:
+                return None
 
-        json = response.json()['results']['bindings']
-
-        if len(json) == 0:
-            return None
-
-        p_output = {}
-        for item in json:
-            field = item["field"]["value"].split('/')[-1].split('#')[-1]
-            data = item["data"]["value"].split('/')[-1].split('#')[-1]
-            if field in p_output.keys():
-                if p_output[field].__class__ == str:
-                    p_output[field] = [p_output[field], data]
-                elif p_output[field].__class__ == list:
-                    p_output[field].append(data)
-            else:
-                p_output[field] = data
-        return p_output
+            p_output = {}
+            for item in response:
+                field = item["field"]["value"].split('/')[-1].split('#')[-1]
+                data = item["data"]["value"].split('/')[-1].split('#')[-1]
+                if field in p_output.keys():
+                    if p_output[field].__class__ == str:
+                        p_output[field] = [p_output[field], data]
+                    elif p_output[field].__class__ == list:
+                        p_output[field].append(data)
+                else:
+                    p_output[field] = data
+            return p_output
+        except HTTPError:
+            print(f"Failed to query {self.url}")
