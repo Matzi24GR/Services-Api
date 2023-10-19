@@ -1,0 +1,151 @@
+PREFIX cpsv:<http://purl.org/vocab/cpsv#>
+PREFIX dc:<http://purl.org/dc/terms/>
+PREFIX m8g:<http://data.europa.eu/m8g/>
+PREFIX dcat:<http://www.w3.org/ns/dcat#>
+PREFIX adms:<http://www.w3.org/ns/adms#>
+
+WITH <{graph_uri}>
+SELECT ?field ?subId ?subField ?data {{
+    {{ # Adressee 0..*
+        SELECT ?addressee as ?data ("addressee" as ?field)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dc:audience ?addressee }}
+
+    }} UNION {{ # Contact Point 0..*
+        SELECT ?contactPoint as ?data ("contact point" as ?field)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:contactPoint ?contactPoint }}
+
+    }} UNION {{ # Description 0..*
+        SELECT ?description as ?data ("description" as ?field)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dc:description ?description }}
+
+    }} UNION {{ # Follows 0..*
+        SELECT ?rule as ?data ("follows" as ?field)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:follows ?rule }}
+
+    }} UNION {{ # Functions of government (type) 0..*
+         SELECT ?type as ?data ("functions of government" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dc:type ?type }}
+
+    }} UNION {{ # Has Channel
+         SELECT ?hasChannel as ?data ("has channel" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasChannel ?hasChannel }}
+
+    }} UNION {{ # Has Competent Authority
+         SELECT ?hasCompetentAuthority as ?data ("has competent authority" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasCompetentAuthority ?hasCompetentAuthority }}
+
+    }} UNION {{ # Has Cost -> Currency
+         SELECT ?currency as ?data ?hasCost as ?subId ("has cost" as ?field) ("currency" as ?subField)
+         WHERE {{?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasCost ?hasCost. ?hasCost m8g:currency ?currency}}
+
+    }} UNION {{ # Has Cost -> Description
+         SELECT ?description as ?data ?hasCost as ?subId ("has cost" as ?field) ("description" as ?subField)
+         WHERE {{?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasCost ?hasCost. ?hasCost m8g:description ?description}}
+
+    }} UNION {{ # Has Cost -> Has Value
+         SELECT ?hasValue as ?data ?hasCost as ?subId ("has cost" as ?field) ("has value" as ?subField)
+         WHERE {{?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasCost ?hasCost. ?hasCost m8g:hasValue ?hasValue}}
+
+    }} UNION {{ # Has Cost -> Value [LEGACY]
+         SELECT ?value as ?data ?hasCost as ?subId ("has cost" as ?field) ("has value" as ?subField)
+         WHERE {{?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasCost ?hasCost. ?hasCost m8g:value ?value}}
+
+     }} UNION {{ # Has Cost -> Identifier
+         SELECT ?identifier as ?data ?hasCost as ?subId ("has cost" as ?field) ("identifier" as ?subField)
+         WHERE {{?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasCost ?hasCost. ?hasCost dc:identifier ?identifier}}
+
+     }} UNION {{ # Has Cost -> If Accessed Through
+         SELECT ?ifAccessedThrough as ?data ?hasCost as ?subId ("has cost" as ?field) ("if accessed through" as ?subField)
+         WHERE {{?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasCost ?hasCost. ?hasCost m8g:ifAccessedThrough ?ifAccessedThrough}}
+
+     }} UNION {{ # Has Cost -> Is Defined By
+         SELECT ?isDefinedBy as ?data ?hasCost as ?subId ("has cost" as ?field) ("is defined by" as ?subField)
+         WHERE {{?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasCost ?hasCost. ?hasCost m8g:isDefinedBy ?isDefinedBy}}
+
+    }} UNION {{ # Has Input -> Description
+        SELECT ?description as ?data ?hasInput as ?subId ("has input" as ?field) ("description" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:description ?description }}
+
+    }} UNION {{ # Has Input -> Name
+        SELECT ?title as ?data ?hasInput as ?subId ("has input" as ?field) ("name" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:title ?title }}
+
+    }} UNION {{ # Has Input Type
+         SELECT ?hasInputType as ?data ("has input type" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasInputType ?hasInputType }}
+
+    }} UNION {{ # Has Legal Resource
+         SELECT ?hasLegalResource as ?data ("has legal resource" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasLegalResource ?hasLegalResource }}
+
+    }} UNION {{ # Has Participation
+         SELECT ?hasParticipation as ?data ("has participation" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:hasParticipation ?hasParticipation }}
+
+    }} UNION {{ # Holds Requirement
+         SELECT ?holdsRequirement as ?data ("holds requirement" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:holdsRequirement ?holdsRequirement }}
+
+    }} UNION {{ # Identifier
+         SELECT ?identifier as ?data ("identifier" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dc:identifier ?identifier }}
+
+    }} UNION {{ # Is Classified By
+         SELECT ?isClassifiedBy as ?data ("is classified by" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isClassifiedBy ?isClassifiedBy }}
+
+    }} UNION {{ # Is Described At
+         SELECT ?isDescribedAt as ?data ("is described at" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isDescribedAt ?isDescribedAt }}
+
+    }} UNION {{ # Is Grouped By
+         SELECT ?isGroupedBy as ?data ("is grouped by" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isGroupedBy ?isGroupedBy }}
+
+    }} UNION {{ # Keyword
+         SELECT ?keyword as ?data ("keyword" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dcat:keyword ?keyword }}
+
+    }} UNION {{ # Language
+         SELECT ?language as ?data ("language" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dc:language ?language }}
+
+    }} UNION {{ # Name
+         SELECT ?title as ?data ("name" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dc:title ?title }}
+
+    }} UNION {{ # Processing Time
+         SELECT ?processingTime as ?data ("processing time" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:processingTime ?processingTime }}
+
+    }} UNION {{ # Produces
+         SELECT ?produces as ?data ("produces" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:produces ?produces }}
+
+    }} UNION {{ # Related Service
+         SELECT ?relatedService as ?data ("related service" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:relatedService ?relatedService }}
+
+    }} UNION {{ # Requires
+         SELECT ?requires as ?data ("requires" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dc:requires ?requires }}
+
+    }} UNION {{ # Sector
+         SELECT ?sector as ?data ("sector" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:sector ?sector }}
+
+    }} UNION {{ # Spatial
+         SELECT ?spatial as ?data ("spatial" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:spatial ?spatial }}
+
+    }} UNION {{ # Status
+         SELECT ?status as ?data ("status" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id adms:status ?status }}
+
+    }} UNION {{ # Thematic Area
+         SELECT ?thematicArea as ?data ("thematic area" as ?field)
+         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:thematicArea ?thematicArea }}
+
+    }}
+
+}}

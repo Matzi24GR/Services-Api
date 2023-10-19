@@ -60,11 +60,14 @@ class SparqlProvider(Provider):
             print(f"Failed to query {self.url}")
 
     def get_service_details(self, id):
+        non_list_fields = ["identifier", "processing time", "status"]
+        passed_sub_ids = []
 
         f = open("app/models/sparql/query.sparql", "r")
         query = f.read().format(graph_uri=self.graph_uri, id=id)
 
         self.sparql.setQuery(query)
+        self.sparql.setMethod("POST")
         try:
             response = self.sparql.queryAndConvert()['results']['bindings']
 
@@ -73,15 +76,27 @@ class SparqlProvider(Provider):
 
             p_output = {}
             for item in response:
-                field = item["field"]["value"].split('/')[-1].split('#')[-1]
-                data = item["data"]["value"].split('/')[-1].split('#')[-1]
-                if field in p_output.keys():
-                    if p_output[field].__class__ == str:
-                        p_output[field] = [p_output[field], data]
-                    elif p_output[field].__class__ == list:
-                        p_output[field].append(data)
-                else:
+                field = item["field"]["value"]
+                data = item["data"]["value"]
+                sub_field = item.get("subField", {}).get("value", None)
+                sub_id = item.get("subId", {}).get("value", None)
+                if field in non_list_fields:
                     p_output[field] = data
+                else:
+                    if sub_field is not None:
+                        if field not in p_output:
+                            passed_sub_ids.append(sub_id)
+                            p_output[field] = [{sub_field: data}]
+                        else:
+                            if sub_id in passed_sub_ids:
+                                p_output[field][-1][sub_field] = data
+                            else:
+                                p_output[field].append({sub_field: data})
+                    else:
+                        if field not in p_output:
+                            p_output[field] = [data]
+                        else:
+                            p_output[field].append(data)
             return p_output
         except HTTPError:
             print(f"Failed to query {self.url}")
