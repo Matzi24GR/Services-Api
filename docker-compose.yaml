@@ -4,6 +4,6 @@ services:
     build: .
     container_name: cpsv-api
     volumes:
-      - ./config.yaml:/app/config.yaml
+      - ./config.yaml:/services-api/config.yaml
     ports:
       - "80:80"
