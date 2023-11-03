@@ -3,6 +3,7 @@ PREFIX dc:<http://purl.org/dc/terms/>
 PREFIX m8g:<http://data.europa.eu/m8g/>
 PREFIX dcat:<http://www.w3.org/ns/dcat#>
 PREFIX adms:<http://www.w3.org/ns/adms#>
+PREFIX foaf:<http://xmlns.com/foaf/0.1/>
 
 WITH <{graph_uri}>
 SELECT ?field ?subId ?subField ?data {{
@@ -66,9 +67,33 @@ SELECT ?field ?subId ?subField ?data {{
         SELECT ?description as ?data ?hasInput as ?subId ("has input" as ?field) ("description" as ?subField)
         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:description ?description }}
 
+    }} UNION {{ # Has Input -> Identifier
+        SELECT ?identifier as ?data ?hasInput as ?subId ("has input" as ?field) ("identifier" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:identifier ?identifier }}
+
+    }} UNION {{ # Has Input -> Is Conformant To
+        SELECT ?conformsTo as ?data ?hasInput as ?subId ("has input" as ?field) ("is conformant to" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:conformsTo ?conformsTo }}
+
+    }} UNION {{ # Has Input -> Language
+        SELECT ?language as ?data ?hasInput as ?subId ("has input" as ?field) ("language" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:language ?language }}
+
     }} UNION {{ # Has Input -> Name
         SELECT ?title as ?data ?hasInput as ?subId ("has input" as ?field) ("name" as ?subField)
         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:title ?title }}
+
+    }} UNION {{ # Has Input -> Related Documantation
+        SELECT ?page as ?data ?hasInput as ?subId ("has input" as ?field) ("related documentation" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput foaf:page ?page }}
+
+    }} UNION {{ # Has Input -> Supports Requirement
+        SELECT ?supportsRequirement as ?data ?hasInput as ?subId ("has input" as ?field) ("supports requirement" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput m8g:supportsRequirement ?supportsRequirement }}
+
+    }} UNION {{ # Has Input -> Type
+        SELECT ?type as ?data ?hasInput as ?subId ("has input" as ?field) ("type" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:hasInput ?hasInput. ?hasInput dc:type ?type }}
 
     }} UNION {{ # Has Input Type
          SELECT ?hasInputType as ?data ("has input type" as ?field)
@@ -102,6 +127,26 @@ SELECT ?field ?subId ?subField ?data {{
          SELECT ?isGroupedBy as ?data ("is grouped by" as ?field)
          WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isGroupedBy ?isGroupedBy }}
 
+    }} UNION {{ # Is Grouped By -> Description
+        SELECT ?description as ?data ?isGroupedBy as ?subId ("is grouped by" as ?field) ("description" as ?subField)
+        WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isGroupedBy ?isGroupedBy. ?isGroupedBy dc:description ?description }}
+
+    }} UNION {{ # Is Grouped By -> Has Related Service
+            SELECT ?hasRelatedService as ?data ?isGroupedBy as ?subId ("is grouped by" as ?field) ("has related service" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isGroupedBy ?isGroupedBy. ?isGroupedBy m8g:hasRelatedService ?hasRelatedService }}
+
+    }} UNION {{ # Is Grouped By -> Identifier
+            SELECT ?identifier as ?data ?isGroupedBy as ?subId ("is grouped by" as ?field) ("identifier" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isGroupedBy ?isGroupedBy. ?isGroupedBy dc:identifier ?identifier }}
+
+    }} UNION {{ # Is Grouped By -> Name
+            SELECT ?name as ?data ?isGroupedBy as ?subId ("is grouped by" as ?field) ("name" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isGroupedBy ?isGroupedBy. ?isGroupedBy dc:title ?name }}
+
+    }} UNION {{ # Is Grouped By -> Type
+            SELECT ?type as ?data ?isGroupedBy as ?subId ("is grouped by" as ?field) ("type" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:isGroupedBy ?isGroupedBy. ?isGroupedBy dc:type ?type }}
+
     }} UNION {{ # Keyword
          SELECT ?keyword as ?data ("keyword" as ?field)
          WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id dcat:keyword ?keyword }}
@@ -118,9 +163,25 @@ SELECT ?field ?subId ?subField ?data {{
          SELECT ?processingTime as ?data ("processing time" as ?field)
          WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id m8g:processingTime ?processingTime }}
 
-    }} UNION {{ # Produces
-         SELECT ?produces as ?data ("produces" as ?field)
-         WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:produces ?produces }}
+    }} UNION {{ # Produces -> Description
+            SELECT ?description as ?data ?produces as ?subId ("produces" as ?field) ("description" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:produces ?produces. ?produces dc:description ?description }}
+
+    }} UNION {{ # Produces -> Identifier
+            SELECT ?identifier as ?data ?produces as ?subId ("produces" as ?field) ("identifier" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:produces ?produces. ?produces dc:identifier ?identifier }}
+
+    }} UNION {{ # Produces -> Language
+            SELECT ?language as ?data ?produces as ?subId ("produces" as ?field) ("language" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:produces ?produces. ?produces dc:language ?language }}
+
+    }} UNION {{ # Produces -> Name
+            SELECT ?name as ?data ?produces as ?subId ("produces" as ?field) ("name" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:produces ?produces. ?produces dc:title ?name }}
+
+    }} UNION {{ # Produces -> Type
+            SELECT ?type as ?data ?produces as ?subId ("produces" as ?field) ("type" as ?subField)
+            WHERE {{ ?id a cpsv:PublicService. FILTER (regex(str(?id),"{id}")). ?id cpsv:produces ?produces. ?produces dc:type ?type }}
 
     }} UNION {{ # Related Service
          SELECT ?relatedService as ?data ("related service" as ?field)

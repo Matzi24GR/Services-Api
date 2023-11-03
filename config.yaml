@@ -5,12 +5,6 @@ providers:
     url: "http://data.dai.uom.gr:8890/sparql"
     graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
 
-  - tag: "geomat.dev"
-    name: "Remote self-hosted Virtuoso"
-    type: sparql
-    url: "https://sparql.geomat.dev"
-    graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
-
 #  - tag: "local"
 #    name: "Local Virtuoso"
 #    type: sparql

@@ -1,7 +1,4 @@
-import os
 from urllib.error import HTTPError
-
-import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 from ..Provider import Provider
@@ -63,7 +60,7 @@ class SparqlProvider(Provider):
         non_list_fields = ["identifier", "processing time", "status"]
         passed_sub_ids = []
 
-        f = open("app/models/sparql/query.sparql", "r")
+        f = open("app/models/sparql/service_details.sparql", "r")
         query = f.read().format(graph_uri=self.graph_uri, id=id)
 
         self.sparql.setQuery(query)
