@@ -1,0 +1,49 @@
+PREFIX cpsv:<http://purl.org/vocab/cpsv#>
+PREFIX dc:<http://purl.org/dc/terms/>
+PREFIX m8g:<http://data.europa.eu/m8g/>
+PREFIX dcat:<http://www.w3.org/ns/dcat#>
+PREFIX adms:<http://www.w3.org/ns/adms#>
+PREFIX foaf:<http://xmlns.com/foaf/0.1/>
+
+CONSTRUCT {
+   ?id dc:title ?title ;
+       cpsv:hasInput ?hasInput;
+       m8g:hasCost ?hasCost;
+       m8g:hasLegalResource ?hasLegalResource;
+       dcat:keyword ?keyword;
+       cpsv:produces ?produces;
+       m8g:holdsRequirement ?holdsRequirement.
+
+   ?hasInput dc:title ?hasInputTitle.
+   ?hasCost m8g:hasValue ?hasValue.
+   ?produces dc:title ?producesTitle.
+   ?holdsRequirement dc:title ?requirementTitle.
+   ?holdsRequirement dc:type ?requirementType.
+}
+WHERE {
+   ?id a cpsv:PublicService.
+   OPTIONAL { ?id dc:title ?title }.
+   OPTIONAL {
+      ?id cpsv:hasInput ?hasInput.
+      OPTIONAL { ?hasInput dc:title ?hasInputTitle }
+   }.
+   OPTIONAL {
+      ?id m8g:hasCost ?hasCost.
+      OPTIONAL { ?hasCost m8g:hasValue ?hasValue }
+   }.
+   OPTIONAL {
+      ?id m8g:hasLegalResource ?hasLegalResource
+   }.
+   OPTIONAL {
+      ?id dcat:keyword ?keyword
+   }.
+   OPTIONAL {
+      ?id cpsv:produces ?produces.
+      OPTIONAL { ?produces dc:title ?producesTitle }
+   }.
+   OPTIONAL {
+       ?id m8g:holdsRequirement ?holdsRequirement.
+       OPTIONAL {  ?holdsRequirement dc:title ?requirementTitle }.
+       OPTIONAL {  ?holdsRequirement dc:type ?requirementType }
+   }.
+}

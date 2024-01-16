@@ -18,3 +18,7 @@ class Provider(ABC):
     @abstractmethod
     def get_service_details(self, id):
         pass
+
+    @abstractmethod
+    def get_outputs(self):
+        pass

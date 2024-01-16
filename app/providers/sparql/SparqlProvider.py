@@ -60,7 +60,7 @@ class SparqlProvider(Provider):
         non_list_fields = ["identifier", "processing time", "status"]
         passed_sub_ids = []
 
-        f = open("app/models/sparql/service_details.sparql", "r")
+        f = open("app/providers/sparql/service_details.sparql", "r")
         query = f.read().format(graph_uri=self.graph_uri, id=id)
 
         self.sparql.setQuery(query)
@@ -95,5 +95,40 @@ class SparqlProvider(Provider):
                         else:
                             p_output[field].append(data)
             return p_output
+        except HTTPError:
+            print(f"Failed to query {self.url}")
+
+    def get_outputs(self):
+        query = f"""
+            PREFIX cpsv:<http://purl.org/vocab/cpsv#>
+            PREFIX m8g:<http://data.europa.eu/m8g/>
+            PREFIX dc:<http://purl.org/dc/terms/>
+            
+            SELECT DISTINCT ?output ?outputTitle ?service ?serviceTitle 
+            WHERE {{
+                ?service cpsv:produces ?output.
+                ?output dc:title ?outputTitle.
+                ?service dc:title ?serviceTitle
+            }}
+        """
+        self.sparql.setQuery(query)
+        try:
+            response = self.sparql.queryAndConvert()['results']['bindings']
+            for item in response:
+                id = item['output']['value']
+                item.pop('output')
+                item['id'] = id.split('/')[-1]
+                name = item['outputTitle']['value']
+                item.pop('outputTitle')
+                item['name'] = name
+                item['provider'] = self.tag
+                service_id = item['service']['value'].split('/')[-1]
+                service_name = item['serviceTitle']['value']
+                item.pop('service')
+                item.pop('serviceTitle')
+                item['service'] = {}
+                item['service']['id'] = service_id
+                item['service']['name'] = service_name
+            return response
         except HTTPError:
             print(f"Failed to query {self.url}")

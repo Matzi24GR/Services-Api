@@ -1,16 +1,11 @@
 FROM python:3.11.6-alpine
 
-WORKDIR /services-api
+WORKDIR /api
 
-COPY requirements.txt requirements.txt
-#RUN apk --update add bash curl
-RUN pip3 install -r requirements.txt
+COPY ./requirements.txt /api/requirements.txt
 
-COPY app/ app/
+RUN pip install --no-cache-dir --upgrade -r /api/requirements.txt
 
-ENV FLASK_APP=app/app.py
-ENV PYTHONPATH=app/
+COPY ./app /api/app
 
-EXPOSE 80
-#ENTRYPOINT python src/app.py
-CMD ["gunicorn", "-w", "4", "--bind", "0.0.0.0:80", "app:app"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
