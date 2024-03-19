@@ -1,0 +1,139 @@
+PREFIX cpsv:<http://purl.org/vocab/cpsv#>
+PREFIX dc:<http://purl.org/dc/terms/>
+PREFIX m8g:<http://data.europa.eu/m8g/>
+PREFIX dcat:<http://www.w3.org/ns/dcat#>
+PREFIX adms:<http://www.w3.org/ns/adms#>
+PREFIX foaf:<http://xmlns.com/foaf/0.1/>
+PREFIX eli:<http://data.europa.eu/eli/ontology#>
+
+WITH <[[graph_uri]]>
+CONSTRUCT {
+    ?id dc:title ?title ;
+        a cpsv:PublicService;
+        dc:audience ?addressee;
+        m8g:contactPoint ?contactPoint;
+        dc:description ?description;
+        cpsv:follows ?rule;
+        dc:type ?functionsOfGovernment;
+
+        cpsv:hasInput ?hasInput;
+        m8g:hasCost ?hasCost;
+        m8g:hasLegalResource ?hasLegalResource;
+        dcat:keyword ?keyword;
+        cpsv:produces ?produces;
+        m8g:holdsRequirement ?holdsRequirement.
+
+    # Contact Point
+    ?contactPoint m8g:specialOpeningHoursSpecification ?availabilityRestriction.
+    ?availabilityRestriction dc:description ?availabilityRestriction_description.
+    ?availabilityRestriction m8g:frequency ?availabilityRestriction_frequency.
+    ?contactPoint m8g:contactPage ?contactPage.
+    ?contactPoint m8g:email ?email.
+    ?contactPoint m8g:telephone ?telephone.
+    ?contactPoint m8g:openingHours ?openingHours.
+    ?openingHours dc:description ?openingHours_description.
+    ?openingHours m8g:frequency ?openingHours_frequency.
+
+    # Follows
+    ?rule dc:description ?rule_description.
+    ?rule dc:identifier ?rule_identifier.
+    ?rule cpsv:implements ?rule_legalResource.
+    ?rule_legalResource  dc:identifier ?rule_legalResource_identifier.
+    ?rule_legalResource  dc:description ?rule_legalResource_description.
+    ?rule_legalResource  eli:id_local ?rule_legalResource_idLocal.
+    ?rule dc:language ?rule_language.
+    ?rule dc:title ?rule_name.
+    ?rule dc:type ?rule_type.
+
+    ?hasInput dc:title ?hasInputTitle.
+    ?hasCost m8g:hasValue ?hasValue.
+    ?hasCost m8g:value ?value. # for compatability
+    ?hasCost dc:description ?hasCostDescription.
+    ?produces dc:title ?producesTitle.
+    ?holdsRequirement dc:title ?requirementTitle.
+    ?holdsRequirement dc:type ?requirementType.
+    ?hasLegalResource dc:identifier ?hasLegalResource_identifier.
+    ?hasLegalResource dc:description ?hasLegalResource_description.
+    ?hasLegalResource eli:id_local ?hasLegalResource_idLocal.
+}
+WHERE {
+    ?id a cpsv:PublicService.
+    FILTER (regex(str(?id),"[[id]]")).
+
+    # Title ✓✓
+    OPTIONAL { ?id dc:title ?title }.
+
+    # Addressee ✓✓
+    OPTIONAL { ?id dc:audience ?addressee }.
+
+    # Contact Point ✓✓
+    OPTIONAL {
+        ?id m8g:contactPoint ?contactPoint.
+        OPTIONAL {
+            ?contactPoint m8g:specialOpeningHoursSpecification ?availabilityRestriction.
+            OPTIONAL { ?availabilityRestriction dc:description ?availabilityRestriction_description }.
+            OPTIONAL { ?availabilityRestriction m8g:frequency ?availabilityRestriction_frequency }
+        }.
+        OPTIONAL { ?contactPoint m8g:contactPage ?contactPage }.
+        OPTIONAL { ?contactPoint m8g:email ?email }.
+        OPTIONAL { ?contactPoint m8g:telephone ?telephone }.
+        OPTIONAL {
+            ?contactPoint m8g:openingHours ?openingHours.
+            OPTIONAL { ?openingHours dc:description ?openingHours_description }.
+            OPTIONAL { ?openingHours m8g:frequency ?openingHours_frequency }
+        }
+   }.
+
+    # Description ✓✓
+    OPTIONAL { ?id dc:description ?description }.
+
+    # Follows ✓✓
+    OPTIONAL {
+        ?id cpsv:follows ?rule.
+        OPTIONAL { ?rule dc:description ?rule_description }.
+        OPTIONAL { ?rule dc:identifier ?rule_identifier }.
+        OPTIONAL {
+            ?rule cpsv:implements ?rule_legalResource.
+            OPTIONAL {?rule_legalResource  dc:identifier ?rule_legalResource_identifier}.
+            OPTIONAL {?rule_legalResource  dc:description ?rule_legalResource_description}.
+            OPTIONAL {?rule_legalResource  eli:id_local ?rule_legalResource_idLocal}
+        }.
+        OPTIONAL { ?rule dc:language ?rule_language }.
+        OPTIONAL { ?rule dc:title ?rule_name }.
+        OPTIONAL { ?rule dc:type ?rule_type }
+    }.
+
+    # Functions Of Government ✓✓
+    OPTIONAL { ?id dc:type ?functionsOfGovernment }.
+
+
+    OPTIONAL {
+        ?id cpsv:hasInput ?hasInput.
+        OPTIONAL { ?hasInput dc:title ?hasInputTitle }
+    }.
+    OPTIONAL {
+        ?id m8g:hasCost ?hasCost.
+        OPTIONAL { ?hasCost m8g:hasValue ?hasValue }.
+        OPTIONAL { ?hasCost dc:description ?hasCostDescription }.
+        OPTIONAL { ?hasCost m8g:value ?value } # for compatability
+    }.
+    OPTIONAL {
+        ?id m8g:hasLegalResource ?hasLegalResource.
+        OPTIONAL {?hasLegalResource dc:identifier ?hasLegalResource_identifier}.
+        OPTIONAL {?hasLegalResource dc:description ?hasLegalResource_description}.
+        OPTIONAL {?hasLegalResource eli:id_local ?hasLegalResource_idLocal}
+    }.
+    OPTIONAL {
+        ?id dcat:keyword ?keyword
+    }.
+    OPTIONAL {
+        ?id cpsv:produces ?produces.
+        OPTIONAL { ?produces dc:title ?producesTitle }
+    }.
+    OPTIONAL {
+        ?id m8g:holdsRequirement ?holdsRequirement.
+        OPTIONAL {  ?holdsRequirement dc:title ?requirementTitle }.
+        OPTIONAL {  ?holdsRequirement dc:type ?requirementType }
+    }
+
+}

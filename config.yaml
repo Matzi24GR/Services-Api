@@ -1,12 +1,19 @@
 providers:
-  - tag: "uom.gr"
-    name: "Data Dai Virtuoso"
-    type: sparql
-    url: "http://data.dai.uom.gr:8890/sparql"
-    graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
+#  - tag: "uom.gr"
+#    name: "Data Dai Virtuoso"
+#    type: sparql
+#    url: "http://data.dai.uom.gr:8890/sparql"
+#    graph_uri: "http://data.dai.uom.gr:8890/CPSV-AP"
 
-  - tag: "local-mitos"
-    name: "Local Virtuoso With Mitos Data"
+#  - tag: "local-mitos"
+#    name: "Local Virtuoso With Mitos Data"
+#    type: sparql
+#    url: "http://localhost:8080/sparql/"
+#    graph_uri: "https://mitos.gov.gr:8890/"
+
+  - tag: "bdti-mitos"
+    name: "BDTI Virtuoso With Mitos Data"
+    cpsv_version: "3.1.1"
     type: sparql
-    url: "http://localhost:8080/sparql/"
+    url: "https://virtuoso-1706142355.p1.bdti.dataplatform.tech.ec.europa.eu/sparql/"
     graph_uri: "https://mitos.gov.gr:8890/"

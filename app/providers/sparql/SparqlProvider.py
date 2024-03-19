@@ -1,17 +1,32 @@
+import os
 from urllib.error import HTTPError
-from SPARQLWrapper import SPARQLWrapper, JSON
 
+import rdflib.term
+from SPARQLWrapper import JSON, SPARQLWrapper, Wrapper
+from rdflib import RDF, Namespace
+import yaml
+import json
+
+from .SparqlQueryBuilder import SparqlQueryBuilder
 from ..Provider import Provider
 
 
 class SparqlProvider(Provider):
 
-    def __init__(self, type, name, tag, url, graph_uri):
+    def __init__(self, type, name, tag, url, graph_uri, cpsv_version):
         self.type = type
         self.name = name
         self.tag = tag
         self.url = url
         self.graph_uri = graph_uri
+        self.cpsv_version = cpsv_version
+
+        current_working_directory = os.getcwd()
+        print(current_working_directory)
+        with open(f"app/providers/sparql/data/{cpsv_version}-config.yaml") as config_file:
+            self.config = yaml.load(config_file, yaml.FullLoader)
+        with open(f"app/providers/sparql/data/{cpsv_version}-cpsv-ap.jsonld") as cpsv_file:
+            self.cpsv = json.load(cpsv_file)['@context']
 
         self.sparql = SPARQLWrapper(self.url, self.graph_uri)
         self.sparql.setReturnFormat(JSON)
@@ -22,11 +37,13 @@ class SparqlProvider(Provider):
                               name=dict['name'],
                               tag=dict['tag'],
                               url=dict["url"],
-                              graph_uri=dict["graph_uri"]
+                              graph_uri=dict["graph_uri"],
+                              cpsv_version=dict["cpsv_version"]
                               )
 
     def to_dict(self):
-        return {"name": self.name, "type": self.type, "tag": self.tag, "url": self.url, "graph-uri": self.graph_uri}
+        return {"name": self.name, "cpsv_version": self.cpsv_version, "type": self.type, "tag": self.tag,
+                "url": self.url, "graph-uri": self.graph_uri}
 
     def get_services(self):
         query = f"""
@@ -41,6 +58,7 @@ class SparqlProvider(Provider):
             }} 
             ORDER BY ?name
         """
+        self.sparql.setReturnFormat(JSON)
         self.sparql.setQuery(query)
         try:
             response = self.sparql.queryAndConvert()['results']['bindings']
@@ -57,46 +75,42 @@ class SparqlProvider(Provider):
             print(f"Failed to query {self.url}")
 
     def get_service_details(self, id):
-        non_list_fields = ["identifier", "processing time", "status"]
-        passed_sub_ids = []
-
-        f = open("app/providers/sparql/service_details.sparql", "r")
-        query = f.read().format(graph_uri=self.graph_uri, id=id)
-
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getServiceDetails').add_filter(id).build()
+        self.sparql.addParameter("default-graph-uri", self.graph_uri)
+        self.sparql.setReturnFormat(Wrapper.RDFXML)
+        self.sparql.setMethod(Wrapper.POST)
         self.sparql.setQuery(query)
-        self.sparql.setMethod("POST")
         try:
-            response = self.sparql.queryAndConvert()['results']['bindings']
-
-            if len(response) == 0:
-                return None
-
-            p_output = {}
-            for item in response:
-                field = item["field"]["value"]
-                data = item["data"]["value"]
-                sub_field = item.get("subField", {}).get("value", None)
-                sub_id = item.get("subId", {}).get("value", None)
-                if field in non_list_fields:
-                    p_output[field] = data
-                else:
-                    if sub_field is not None:
-                        if field not in p_output:
-                            passed_sub_ids.append(sub_id)
-                            p_output[field] = [{sub_field: data}]
-                        else:
-                            if sub_id in passed_sub_ids:
-                                p_output[field][-1][sub_field] = data
-                            else:
-                                p_output[field].append({sub_field: data})
-                    else:
-                        if field not in p_output:
-                            p_output[field] = [data]
-                        else:
-                            p_output[field].append(data)
-            return p_output
+            response = self.sparql.queryAndConvert()
+            for publicService in response.triples((None, RDF.type, rdflib.URIRef(query_builder.target))):
+                result = self.getAllNestedChildTriples(response, publicService[0])
+                return result
         except HTTPError:
             print(f"Failed to query {self.url}")
+
+    @classmethod
+    def getAllNestedChildTriples(self, graph, subject):
+        if isinstance(subject, rdflib.term.URIRef):
+            result_dict = {}
+            for triple in graph.triples((subject, None, None)):
+                next_level = self.getAllNestedChildTriples(graph, triple[2])
+                if next_level == {}:
+                    next_level = triple[2]
+                predicate = str(triple[1])
+                if predicate in result_dict:
+                    if isinstance(result_dict[predicate], list):
+                        result_dict[predicate].append(next_level)
+                    else:
+                        result_dict[predicate] = [result_dict[predicate], next_level]
+                else:
+                    result_dict[predicate] = next_level
+            return result_dict
+        elif isinstance(subject, rdflib.term.Literal):
+            return str(subject)
+        else:
+            return "this shouldn't ever happen"
+
 
     def get_outputs(self):
         query = f"""
