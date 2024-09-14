@@ -50,7 +50,7 @@ Linked Open Data (LOD) has become crucial for promoting transparency and interop
 
     ```bash
     git clone https://github.com/Matzi24GR/Services-Api
-    cd CPSV-API
+    cd Services-Api
     ```
    
 2. Install the required dependencies:
