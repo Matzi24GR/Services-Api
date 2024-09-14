@@ -22,3 +22,23 @@ class Provider(ABC):
     @abstractmethod
     def get_outputs(self):
         pass
+
+    @abstractmethod
+    def get_organizations(self):
+        pass
+
+    @abstractmethod
+    def get_evidences(self):
+        pass
+
+    @abstractmethod
+    def get_requirements(self):
+        pass
+
+    @abstractmethod
+    def get_rules(self):
+        pass
+
+    @abstractmethod
+    def get_legal_resources(self):
+        pass

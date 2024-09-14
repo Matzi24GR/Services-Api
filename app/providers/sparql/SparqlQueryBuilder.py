@@ -78,4 +78,3 @@ class SparqlQueryBuilder:
             return cpsv[name]['@id']
         else:
             return cpsv[name]
-

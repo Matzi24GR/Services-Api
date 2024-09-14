@@ -1,10 +1,70 @@
 queries:
 
+  getOutputs:
+    target: PublicService
+    elements:
+      - PublicService.produces:
+          - Output.name
+
+
+  getOrganizations:
+    target: Organization
+    elements:
+      - PublicOrganization.preferredLabel
+      - PublicOrganization.spatial
+
+
+  getEvidences:
+    target: Evidence
+    elements:
+      - Evidence.description
+      - Evidence.identifier
+      - Evidence.isConformantTo
+      - Evidence.language
+      - Evidence.name
+      - Evidence.relatedDocumentation
+      - Evidence.supportsRequirement
+      - Evidence.type:
+          - EvidenceType.evidenceTypeClassification
+          - EvidenceType.identifier
+
+
+  getRequirements:
+    target: Requirement
+    elements:
+      - Requirement.fulfils
+      - Requirement.hasSupportingEvidence
+      - Requirement.identifier
+      - Requirement.name
+      - Requirement.type
+
+
+  getRules:
+    target: Rule
+    elements:
+      - Rule.description
+      - Rule.identifier
+      - Rule.implements:
+          - CUSTOM=http://data.europa.eu/eli/ontology#id_local
+          - LegalResource.related
+      - Rule.language
+      - Rule.name
+      - Rule.type
+
+
+  getLegalResources:
+    target: LegalResource
+    elements:
+      - CUSTOM=http://data.europa.eu/eli/ontology#id_local
+      - LegalResource.related
+
+
   getServices:
     target: PublicService
     elements:
       - PublicService.name
-      - PublicService.identifier
+      - PublicService.keyword
+
 
   getServiceDetails:
     target: PublicService

@@ -2,8 +2,8 @@ import os
 from urllib.error import HTTPError
 
 import rdflib.term
-from SPARQLWrapper import JSON, SPARQLWrapper, Wrapper
-from rdflib import RDF, Namespace
+from SPARQLWrapper import SPARQLWrapper, Wrapper
+from rdflib import RDF
 import yaml
 import json
 
@@ -29,7 +29,9 @@ class SparqlProvider(Provider):
             self.cpsv = json.load(cpsv_file)['@context']
 
         self.sparql = SPARQLWrapper(self.url, self.graph_uri)
-        self.sparql.setReturnFormat(JSON)
+        self.sparql.addParameter("default-graph-uri", self.graph_uri)
+        self.sparql.setReturnFormat(Wrapper.RDFXML)
+        self.sparql.setMethod(Wrapper.POST)
 
     @classmethod
     def from_dict(cls, dict):
@@ -46,58 +48,74 @@ class SparqlProvider(Provider):
                 "url": self.url, "graph-uri": self.graph_uri}
 
     def get_services(self):
-        query = f"""
-            PREFIX cpsv:<http://purl.org/vocab/cpsv#>
-            PREFIX dct: <http://purl.org/dc/terms/>
-            
-            WITH <{self.graph_uri}>
-            SELECT DISTINCT ?id ?name
-            WHERE {{
-                ?id a cpsv:PublicService.
-                ?id dct:title ?name
-            }} 
-            ORDER BY ?name
-        """
-        self.sparql.setReturnFormat(JSON)
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getServices').build()
         self.sparql.setQuery(query)
-        try:
-            response = self.sparql.queryAndConvert()['results']['bindings']
-            for item in response:
-                id = item['id']['value']
-                item.pop('id')
-                item['id'] = id.split('/')[-1]
-                name = item['name']['value']
-                item.pop('name')
-                item['name'] = name
-                item['provider'] = self.tag
-            return response
-        except HTTPError:
-            print(f"Failed to query {self.url}")
+        return self.get_response(query_builder.target)
 
     def get_service_details(self, id):
         query_builder = SparqlQueryBuilder(self.config, self.cpsv)
         query = query_builder.set_query('getServiceDetails').add_filter(id).build()
-        self.sparql.addParameter("default-graph-uri", self.graph_uri)
-        self.sparql.setReturnFormat(Wrapper.RDFXML)
-        self.sparql.setMethod(Wrapper.POST)
         self.sparql.setQuery(query)
+        response = self.get_response(query_builder.target)
+        return response
+
+    def get_outputs(self):
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getOutputs').build()
+        self.sparql.setQuery(query)
+        return self.get_response(query_builder.target)
+
+    def get_organizations(self):
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getOrganizations').build()
+        self.sparql.setQuery(query)
+        return self.get_response(query_builder.target)
+
+    def get_evidences(self):
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getEvidences').build()
+        self.sparql.setQuery(query)
+        return self.get_response(query_builder.target)
+
+    def get_requirements(self):
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getRequirements').build()
+        self.sparql.setQuery(query)
+        return self.get_response(query_builder.target)
+
+    def get_rules(self):
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getRules').build()
+        self.sparql.setQuery(query)
+        return self.get_response(query_builder.target)
+
+
+    def get_legal_resources(self):
+        query_builder = SparqlQueryBuilder(self.config, self.cpsv)
+        query = query_builder.set_query('getLegalResources').build()
+        self.sparql.setQuery(query)
+        return self.get_response(query_builder.target)
+
+    def get_response(self, target):
         try:
             response = self.sparql.queryAndConvert()
-            for publicService in response.triples((None, RDF.type, rdflib.URIRef(query_builder.target))):
-                result = self.getAllNestedChildTriples(response, publicService[0])
-                return result
+            for item in response.triples((None, RDF.type, rdflib.URIRef(target))):
+                result = self.get_all_nested_child_triples(response, item[0])
+                yield result
         except HTTPError:
             print(f"Failed to query {self.url}")
 
-    @classmethod
-    def getAllNestedChildTriples(self, graph, subject):
+    def get_all_nested_child_triples(self, graph, subject):
         if isinstance(subject, rdflib.term.URIRef):
-            result_dict = {}
+            result_dict = {'id': subject.replace(self.graph_uri, '')}
             for triple in graph.triples((subject, None, None)):
-                next_level = self.getAllNestedChildTriples(graph, triple[2])
+                next_level = self.get_all_nested_child_triples(graph, triple[2])
                 if next_level == {}:
                     next_level = triple[2]
                 predicate = str(triple[1])
+                if predicate == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type":
+                    continue
                 if predicate in result_dict:
                     if isinstance(result_dict[predicate], list):
                         result_dict[predicate].append(next_level)
@@ -108,41 +126,3 @@ class SparqlProvider(Provider):
             return result_dict
         elif isinstance(subject, rdflib.term.Literal):
             return str(subject)
-        else:
-            return "this shouldn't ever happen"
-
-
-    def get_outputs(self):
-        query = f"""
-            PREFIX cpsv:<http://purl.org/vocab/cpsv#>
-            PREFIX m8g:<http://data.europa.eu/m8g/>
-            PREFIX dc:<http://purl.org/dc/terms/>
-            
-            SELECT DISTINCT ?output ?outputTitle ?service ?serviceTitle 
-            WHERE {{
-                ?service cpsv:produces ?output.
-                ?output dc:title ?outputTitle.
-                ?service dc:title ?serviceTitle
-            }}
-        """
-        self.sparql.setQuery(query)
-        try:
-            response = self.sparql.queryAndConvert()['results']['bindings']
-            for item in response:
-                id = item['output']['value']
-                item.pop('output')
-                item['id'] = id.split('/')[-1]
-                name = item['outputTitle']['value']
-                item.pop('outputTitle')
-                item['name'] = name
-                item['provider'] = self.tag
-                service_id = item['service']['value'].split('/')[-1]
-                service_name = item['serviceTitle']['value']
-                item.pop('service')
-                item.pop('serviceTitle')
-                item['service'] = {}
-                item['service']['id'] = service_id
-                item['service']['name'] = service_name
-            return response
-        except HTTPError:
-            print(f"Failed to query {self.url}")
